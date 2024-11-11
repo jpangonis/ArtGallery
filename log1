@@ -1,0 +1,10 @@
+1,Employee,Fred,Arrival
+2,Guest,Jill,Arrival
+3,Employee,Fred,Arrival,Room:1
+4,Guest,Jill,Arrival,Room:1
+5,Employee,Fred,Leave,Room:1
+6,Employee,Fred,Arrival,Room:2
+7,Employee,Fred,Leave,Room:2
+8,Employee,Fred,Arrival,Room:3
+9,Employee,Fred,Leave,Room:3
+10,Employee,Fred,Arrival,Room:1
