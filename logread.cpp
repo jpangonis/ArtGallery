@@ -9,6 +9,7 @@
 #include <sstream>
 
 //decrypt log entry when reading
+//ensure no XSS
 
 int main(int argc, char* argv[]) {
     std::string token, logFile, queryType, personType, personName;
