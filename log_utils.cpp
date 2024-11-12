@@ -5,6 +5,7 @@
 #include <cryptopp/modes.h>
 #include <cryptopp/osrng.h>
 #include <iostream>
+/* TODO encrypt the log files, do we need to encrypt the token?*/
 
 const std::string encryptionKey = "thisisasecretkey"; // Exactly 16-byte key
 

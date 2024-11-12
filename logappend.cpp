@@ -7,8 +7,11 @@
 #include <unordered_map>
 #include <set>
 
+//Updates needed: ensure that only appending is allowed
+//encrypt the log when appending
+
 struct LogEntry {
-    std::string timestamp;
+    std::string timestamp;;
     std::string personType;
     std::string personName;
     std::string action;
@@ -62,9 +65,6 @@ void processBatchFile(const std::string& batchFile, const std::string& logFile, 
 
     std::string line;
     while (std::getline(file, line)) {
-        // Parse each line from the batch file as if it were a command line
-        // Example command parsing here, extracting arguments as in main
-        // If a command is invalid, print "invalid" and skip to the next line
     }
 }
 

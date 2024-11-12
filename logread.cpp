@@ -1,4 +1,4 @@
-#include "log_utils.h" // Assuming helper functions like encryptToken, verifyToken are defined here
+#include "log_utils.h" 
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -7,6 +7,8 @@
 #include <set>
 #include <algorithm>
 #include <sstream>
+
+//decrypt log entry when reading
 
 int main(int argc, char* argv[]) {
     std::string token, logFile, queryType, personType, personName;
@@ -75,12 +77,12 @@ int main(int argc, char* argv[]) {
                     roomID = std::stoi(roomStr.substr(pos + 5));  // Parse room number after "Room:"
                 }
                 catch (const std::invalid_argument& e) {
-                    std::cerr << "Invalid log entry: room ID is not a valid integer" << std::endl;
-                    continue; // Skip this entry and move to the next one
+                    std::cerr << "Invalid log entry" << std::endl;
+                    continue; 
                 }
                 catch (const std::out_of_range& e) {
-                    std::cerr << "Invalid log entry: room ID is out of range" << std::endl;
-                    continue; // Skip this entry and move to the next one
+                    std::cerr << "Invalid log entry" << std::endl;
+                    continue; 
                 }
             }
         }
