@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
 
     // Load and encrypt the stored token for verification
     const std::string encryptionKey = "thisisasecretkey";
-    std::string storedEncryptedToken = encryptToken("secret", encryptionKey);
+    std::string storedEncryptedToken = encryptData("secret", encryptionKey);
 
     // Verify provided token
     if (!verifyToken(token, storedEncryptedToken, encryptionKey)) {
@@ -57,8 +57,12 @@ int main(int argc, char* argv[]) {
     std::map<int, std::set<std::string>> roomOccupancy;
     std::map<std::string, std::vector<int>> personRoomHistory;
 
-    std::string logEntry;
-    while (std::getline(log, logEntry)) {
+    std::string EncryptedLogEntry;
+    while (std::getline(log, EncryptedLogEntry)) {
+        std::string logEntry = decryptData(EncryptedLogEntry, encryptionKey);
+
+        //std::cout << logEntry;
+
         // Parse the log entry to determine event type and update the state
         std::istringstream entryStream(logEntry);
         std::string timestamp, type, name, action, roomStr;
@@ -79,11 +83,11 @@ int main(int argc, char* argv[]) {
                 }
                 catch (const std::invalid_argument& e) {
                     std::cerr << "Invalid log entry" << std::endl;
-                    continue; 
+                    continue;
                 }
                 catch (const std::out_of_range& e) {
                     std::cerr << "Invalid log entry" << std::endl;
-                    continue; 
+                    continue;
                 }
             }
         }

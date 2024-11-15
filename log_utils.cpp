@@ -10,7 +10,7 @@
 const std::string encryptionKey = "thisisasecretkey"; // Exactly 16-byte key
 
 // Encrypt the token using AES-CBC with PKCS padding
-std::string encryptToken(const std::string& token, const std::string& key) {
+std::string encryptData(const std::string& token, const std::string& key) {
     using namespace CryptoPP;
     std::string encrypted;
 
@@ -34,7 +34,7 @@ std::string encryptToken(const std::string& token, const std::string& key) {
 }
 
 // Decrypt the token using AES-CBC with PKCS padding
-std::string decryptToken(const std::string& encryptedToken, const std::string& key) {
+std::string decryptData(const std::string& encryptedToken, const std::string& key) {
     using namespace CryptoPP;
     std::string decrypted;
 
@@ -59,5 +59,5 @@ std::string decryptToken(const std::string& encryptedToken, const std::string& k
 
 // Verify the provided token by decrypting the stored encrypted token and comparing
 bool verifyToken(const std::string& providedToken, const std::string& encryptedToken, const std::string& key) {
-    return providedToken == decryptToken(encryptedToken, key);
+    return providedToken == decryptData(encryptedToken, key);
 }

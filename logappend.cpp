@@ -67,7 +67,6 @@ void processBatchFile(const std::string& batchFile, const std::string& logFile, 
     while (std::getline(file, line)) {
     }
 }
-
 int main(int argc, char* argv[]) {
     std::string timestamp, token, personType, personName, action, roomID;
     std::string logFile, batchFile;
@@ -80,7 +79,7 @@ int main(int argc, char* argv[]) {
 
     // Validate the log token
     const std::string encryptionKey = "thisisasecretkey";
-    std::string storedEncryptedToken = encryptToken("secret", encryptionKey);
+    std::string storedEncryptedToken = encryptData("secret", encryptionKey);
     if (!validateToken(token, storedEncryptedToken, encryptionKey)) {
         return 255;
     }
@@ -105,27 +104,29 @@ int main(int argc, char* argv[]) {
         lastTimestamp = line.substr(0, line.find(','));  // Assume log format has timestamp at start
     }
     log.close();
-
+    /*
     if (!lastTimestamp.empty() && !checkTimestampOrder(timestamp, lastTimestamp)) {
         std::cerr << "invalid" << std::endl;
         return 255;
     }
-
-    // Validate entry and exit conditions
-    // Example: check if entering a room without being in the gallery, or leaving a room without entering it
+    */
+    // Validate entry and exit conditions (to be implemented based on your application logic)
 
     // Create log entry
     std::string logEntry = timestamp + "," + personType + "," + personName + "," + action;
-    if (!roomID.empty()) logEntry += ",Room:" + std::to_string(std::stoi(roomID)); // Normalize room ID
+    //if (!roomID.empty()) logEntry += ",Room:" + std::to_string(std::stoi(roomID)); // Normalize room ID
 
-    // Append log entry to log file
+    // Encrypt log entry
+    std::string encryptedLogEntry = encryptData(logEntry, encryptionKey);
+
+    // Append encrypted log entry to log file
     std::ofstream logAppend(logFile, std::ios::app);
     if (!logAppend.is_open()) {
         std::cerr << "invalid" << std::endl;
         return 255;
     }
 
-    logAppend << logEntry << std::endl;
+    logAppend << encryptedLogEntry << std::endl;
     logAppend.close();
 
     std::cout << "Log entry added successfully." << std::endl;
