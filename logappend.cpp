@@ -1,4 +1,4 @@
-#include "log_utils.h" // Assuming helper functions like encryptToken, verifyToken are defined here
+#include "log_utils.h"
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -7,11 +7,9 @@
 #include <unordered_map>
 #include <set>
 
-//Updates needed: ensure that only appending is allowed
-//encrypt the log when appending
 
 struct LogEntry {
-    std::string timestamp;;
+    std::string timestamp;
     std::string personType;
     std::string personName;
     std::string action;
@@ -65,8 +63,10 @@ void processBatchFile(const std::string& batchFile, const std::string& logFile, 
 
     std::string line;
     while (std::getline(file, line)) {
+        // Here, you can implement the batch processing logic
     }
 }
+
 int main(int argc, char* argv[]) {
     std::string timestamp, token, personType, personName, action, roomID;
     std::string logFile, batchFile;
@@ -100,21 +100,24 @@ int main(int argc, char* argv[]) {
     std::ifstream log(logFile);
     std::string lastTimestamp;
     std::string line;
+
     while (std::getline(log, line)) {
-        lastTimestamp = line.substr(0, line.find(','));  // Assume log format has timestamp at start
+        size_t pos = line.find(',');  // Assume log format has timestamp at start
+        if (pos != std::string::npos) {
+            lastTimestamp = line.substr(0, pos);  // Extract the timestamp from the log line
+        }
     }
     log.close();
-    /*
+
+    // Check if the new timestamp is greater than the last timestamp
     if (!lastTimestamp.empty() && !checkTimestampOrder(timestamp, lastTimestamp)) {
         std::cerr << "invalid" << std::endl;
         return 255;
     }
-    */
-    // Validate entry and exit conditions (to be implemented based on your application logic)
 
     // Create log entry
     std::string logEntry = timestamp + "," + personType + "," + personName + "," + action;
-    //if (!roomID.empty()) logEntry += ",Room:" + std::to_string(std::stoi(roomID)); // Normalize room ID
+    if (!roomID.empty()) logEntry += ",Room:" + roomID; // Append the room ID if provided
 
     // Encrypt log entry
     std::string encryptedLogEntry = encryptData(logEntry, encryptionKey);
@@ -126,7 +129,7 @@ int main(int argc, char* argv[]) {
         return 255;
     }
 
-    logAppend << encryptedLogEntry << std::endl;
+    logAppend << encryptedLogEntry;
     logAppend.close();
 
     std::cout << "Log entry added successfully." << std::endl;

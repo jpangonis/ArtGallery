@@ -61,8 +61,6 @@ int main(int argc, char* argv[]) {
     while (std::getline(log, EncryptedLogEntry)) {
         std::string logEntry = decryptData(EncryptedLogEntry, encryptionKey);
 
-        //std::cout << logEntry;
-
         // Parse the log entry to determine event type and update the state
         std::istringstream entryStream(logEntry);
         std::string timestamp, type, name, action, roomStr;
