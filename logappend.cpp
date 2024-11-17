@@ -16,14 +16,17 @@ struct LogEntry {
     std::string roomID;
 };
 
+//input validation with the name
 bool isValidName(const std::string& name) {
     return std::regex_match(name, std::regex("^[a-zA-Z]+$"));
 }
 
+//input validation with room ID
 bool isValidRoomID(const std::string& roomID) {
     return std::regex_match(roomID, std::regex("^[0-9]+$"));
 }
 
+//parse the command line with different arguments
 bool parseCommandLine(int argc, char* argv[], std::string& timestamp, std::string& token,
     std::string& personType, std::string& personName, std::string& action,
     std::string& roomID, std::string& logFile, std::string& batchFile) {
@@ -42,6 +45,7 @@ bool parseCommandLine(int argc, char* argv[], std::string& timestamp, std::strin
     return !(timestamp.empty() || token.empty() || logFile.empty() || personType.empty() || personName.empty() || action.empty());
 }
 
+//ensuring the token given is the correctly stored token
 bool validateToken(const std::string& token, const std::string& storedEncryptedToken, const std::string& encryptionKey) {
     if (!verifyToken(token, storedEncryptedToken, encryptionKey)) {
         std::cerr << "invalid" << std::endl;
@@ -50,10 +54,12 @@ bool validateToken(const std::string& token, const std::string& storedEncryptedT
     return true;
 }
 
+//ensure that the timestamp is greater than the last timestmap in log
 bool checkTimestampOrder(const std::string& newTimestamp, const std::string& lastTimestamp) {
     return std::stoi(newTimestamp) > std::stoi(lastTimestamp);
 }
 
+//untested batch file processing
 void processBatchFile(const std::string& batchFile, const std::string& logFile, const std::string& storedEncryptedToken, const std::string& encryptionKey) {
     std::ifstream file(batchFile);
     if (!file.is_open()) {
@@ -102,7 +108,7 @@ int main(int argc, char* argv[]) {
     std::string line;
 
     while (std::getline(log, line)) {
-        size_t pos = line.find(',');  // Assume log format has timestamp at start
+        size_t pos = line.find(','); 
         if (pos != std::string::npos) {
             lastTimestamp = line.substr(0, pos);  // Extract the timestamp from the log line
         }
