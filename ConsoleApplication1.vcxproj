@@ -133,6 +133,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="log_utils.cpp" />
+    <ClCompile Include="test_log.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="log_utils.h" />

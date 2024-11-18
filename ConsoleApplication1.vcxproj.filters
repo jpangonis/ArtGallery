@@ -24,6 +24,9 @@
     <ClCompile Include="logread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="test_log.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="log_utils.h">
