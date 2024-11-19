@@ -6,8 +6,9 @@
 #include <regex>
 #include <unordered_map>
 #include <set>
+#include <sstream>
 
-
+// Structure to represent a log entry
 struct LogEntry {
     std::string timestamp;
     std::string personType;
@@ -16,17 +17,21 @@ struct LogEntry {
     std::string roomID;
 };
 
-//input validation with the name
+// Maps to maintain the current state of the system
+std::unordered_map<std::string, std::set<std::string>> personRoomMap;
+std::unordered_map<std::string, bool> inGalleryMap;
+
+// Validate the name using regex
 bool isValidName(const std::string& name) {
     return std::regex_match(name, std::regex("^[a-zA-Z]+$"));
 }
 
-//input validation with room ID
+// Validate the room ID using regex
 bool isValidRoomID(const std::string& roomID) {
     return std::regex_match(roomID, std::regex("^[0-9]+$"));
 }
 
-//parse the command line with different arguments
+// Parse the command-line arguments
 bool parseCommandLine(int argc, char* argv[], std::string& timestamp, std::string& token,
     std::string& personType, std::string& personName, std::string& action,
     std::string& roomID, std::string& logFile, std::string& batchFile) {
@@ -45,7 +50,7 @@ bool parseCommandLine(int argc, char* argv[], std::string& timestamp, std::strin
     return !(timestamp.empty() || token.empty() || logFile.empty() || personType.empty() || personName.empty() || action.empty());
 }
 
-//ensuring the token given is the correctly stored token
+// Validate the token
 bool validateToken(const std::string& token, const std::string& storedEncryptedToken, const std::string& encryptionKey) {
     if (!verifyToken(token, storedEncryptedToken, encryptionKey)) {
         std::cerr << "invalid" << std::endl;
@@ -54,93 +59,149 @@ bool validateToken(const std::string& token, const std::string& storedEncryptedT
     return true;
 }
 
-//ensure that the timestamp is greater than the last timestmap in log
+// Check if a new timestamp is greater than the last timestamp
 bool checkTimestampOrder(const std::string& newTimestamp, const std::string& lastTimestamp) {
     return std::stoi(newTimestamp) > std::stoi(lastTimestamp);
 }
 
-//untested batch file processing
-void processBatchFile(const std::string& batchFile, const std::string& logFile, const std::string& storedEncryptedToken, const std::string& encryptionKey) {
-    std::ifstream file(batchFile);
-    if (!file.is_open()) {
-        std::cerr << "invalid" << std::endl;
-        exit(255);
+// Validate state consistency for departure
+bool validateStateForDeparture(const std::string& personName, const std::string& roomID, bool leavingGallery) {
+    if (leavingGallery) {
+        if (!personRoomMap[personName].empty()) {
+            return false;
+        }
+        return inGalleryMap[personName];
     }
-
-    std::string line;
-    while (std::getline(file, line)) {
-        // Here, you can implement the batch processing logic
+    else {
+        return personRoomMap[personName].count(roomID) > 0;
     }
 }
 
+// Prevent entering a room before entering the gallery
+bool validateStateForArrival(const std::string& personName, const std::string& roomID) {
+    if (roomID.empty()) {
+        return true; // No room specified, so it's an arrival at the gallery.
+    }
+    // If a room is specified, check if the person has already entered the gallery.
+    return inGalleryMap[personName];
+}
+
+// Update the state of the system based on the action
+void updateState(const std::string& personName, const std::string& roomID, const std::string& action) {
+    if (action == "Arrival") {
+        // Ensure the person enters the gallery first, before entering any room
+        if (!validateStateForArrival(personName, roomID)) {
+            std::cerr << "invalid" << std::endl;
+            exit(255);  // Exit immediately if inconsistency is found
+        }
+
+        inGalleryMap[personName] = true;
+        if (!roomID.empty()) {
+            personRoomMap[personName].insert(roomID);
+        }
+    }
+    else if (action == "Leave") {
+        if (roomID.empty()) {
+            personRoomMap[personName].clear();
+            inGalleryMap[personName] = false;
+        }
+        else {
+            personRoomMap[personName].erase(roomID);
+        }
+    }
+}
+
+// Process the log file to rebuild the current state
+bool processLogFile(const std::string& logFile, const std::string& encryptionKey, std::string& lastTimestamp) {
+    std::fstream log(logFile, std::ios::in | std::ios::out | std::ios::app); // Open for reading and appending
+    if (!log.is_open()) {
+        std::cerr << "Error: Unable to open or create log file: " << logFile << std::endl;
+        return false;
+    }
+
+    std::string line;
+    while (std::getline(log, line)) {
+        size_t pos = line.find(',');
+        if (pos != std::string::npos) {
+            lastTimestamp = line.substr(0, pos); // Extract the timestamp
+        }
+
+        std::string decryptedLogEntry = decryptData(line, encryptionKey);
+        std::vector<std::string> tokens;
+        std::istringstream ss(decryptedLogEntry);
+        std::string token;
+        while (std::getline(ss, token, ',')) {
+            tokens.push_back(token);
+        }
+
+        if (tokens.size() >= 4) {
+            std::string personName = tokens[2];
+            std::string action = tokens[3];
+            std::string roomID = tokens.size() > 4 ? tokens[4].substr(5) : "";
+            updateState(personName, roomID, action);
+        }
+    }
+    log.close();
+    return true;
+}
+
+// Main function
 int main(int argc, char* argv[]) {
     std::string timestamp, token, personType, personName, action, roomID;
     std::string logFile, batchFile;
 
     auto envVars = loadEnv(".env");
-
     std::string encryptionKey = envVars["ENCRYPTION_KEY"];
     std::string secret = envVars["SECRET"];
 
-    // Parse command-line arguments
     if (!parseCommandLine(argc, argv, timestamp, token, personType, personName, action, roomID, logFile, batchFile)) {
         std::cerr << "invalid" << std::endl;
         return 255;
     }
 
-    // Validate the log token
-    //const std::string encryptionKey = "thisisasecretkey";
     std::string storedEncryptedToken = encryptData(secret, encryptionKey);
     if (!validateToken(token, storedEncryptedToken, encryptionKey)) {
         return 255;
     }
 
-    // Handle batch file processing
-    if (!batchFile.empty()) {
-        processBatchFile(batchFile, logFile, storedEncryptedToken, encryptionKey);
-        return 0;
-    }
-
-    // Validate timestamp, room ID, and name format
     if (!isValidName(personName) || (!roomID.empty() && !isValidRoomID(roomID)) || timestamp.empty()) {
         std::cerr << "invalid" << std::endl;
         return 255;
     }
 
-    // Open log file and check if timestamps are in order
-    std::ifstream log(logFile);
     std::string lastTimestamp;
-    std::string line;
-
-    while (std::getline(log, line)) {
-        size_t pos = line.find(','); 
-        if (pos != std::string::npos) {
-            lastTimestamp = line.substr(0, pos);  // Extract the timestamp from the log line
-        }
+    if (!processLogFile(logFile, encryptionKey, lastTimestamp)) {
+        std::cerr << "invalid" << std::endl;
+        return 255;
     }
-    log.close();
 
-    // Check if the new timestamp is greater than the last timestamp
     if (!lastTimestamp.empty() && !checkTimestampOrder(timestamp, lastTimestamp)) {
         std::cerr << "invalid" << std::endl;
         return 255;
     }
 
-    // Create log entry
-    std::string logEntry = timestamp + "," + personType + "," + personName + "," + action;
-    if (!roomID.empty()) logEntry += ",Room:" + roomID; // Append the room ID if provided
+    if (action == "Leave") {
+        bool leavingGallery = roomID.empty();
+        if (!validateStateForDeparture(personName, roomID, leavingGallery)) {
+            std::cerr << "invalid" << std::endl;
+            return 255;
+        }
+    }
 
-    // Encrypt log entry
+    updateState(personName, roomID, action);
+
+    std::string logEntry = timestamp + "," + personType + "," + personName + "," + action;
+    if (!roomID.empty()) logEntry += ",Room:" + roomID;
+
     std::string encryptedLogEntry = encryptData(logEntry, encryptionKey);
 
-    // Append encrypted log entry to log file
     std::ofstream logAppend(logFile, std::ios::app);
     if (!logAppend.is_open()) {
         std::cerr << "invalid" << std::endl;
         return 255;
     }
 
-    logAppend << encryptedLogEntry;
+    logAppend << encryptedLogEntry << std::endl;
     logAppend.close();
 
     std::cout << "Log entry added successfully." << std::endl;

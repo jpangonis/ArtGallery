@@ -32,7 +32,7 @@ void testLogAppend() {
     assert(runCommand("logappend.exe -T 1 -K secret -A -E Fred log1") == 0);
 
     // Test 2: Invalid timestamp (out of order)
-    assert(runCommand("logappend.exe -T 4 -K secret -A -E Fred -R 2 log1") == 0);
+    assert(runCommand("logappend.exe -T 3 -K secret -A -E Fred -R 1 log1") == 0);
 
     // Test 3: Invalid name (contains numbers)
     assert(runCommand("logappend.exe -T 6 -K secret -A -E Fred123 -R 1 log1") != 0);
@@ -41,10 +41,19 @@ void testLogAppend() {
     assert(runCommand("logappend.exe -T 7 -K secret -A -E Fred -R RoomA log1") != 0);
 
     // Test 5: Adding a guest
-    assert(runCommand("logappend.exe -T 8 -K secret -A -G Alice -R 2 log1") == 0);
+    assert(runCommand("logappend.exe -T 8 -K secret -A -G Alice -R 2 log1") != 0);
 
     //wrong token
     assert(runCommand("logappend.exe -T 9 -K wrongsecret -A -G Alice -R 2 log1") != 0);
+
+    //leaving gallery before leaving room
+    assert(runCommand("logappend.exe -T 10 -K secret -L -G Alice log1") != 0);
+
+    //leaving room correctly
+    assert(runCommand("logappend.exe -T 11 -K secret -L -E Fred -R 1 log1") == 0);
+
+    //incorrect order
+    assert(runCommand("logappend.exe -T 2 -K secret -A -G Fred -R 2 log1") != 0);
 
     std::cout << "logappend tests passed!" << std::endl;
 }
