@@ -55,6 +55,9 @@ void testLogAppend() {
     //Test 9: incorrect order
     assert(runCommand("logappend.exe -T 2 -K secret -A -G Fred -R 2 log1") != 0);
 
+    //Test 10: leaving room before entering
+    assert(runCommand("logappend.exe -T 12 -K secret -L -E Fred -R 2 log1") != 0);
+
     std::cout << "logappend tests passed!" << std::endl;
 }
 
