@@ -65,8 +65,10 @@ void testLogRead() {
     runCommand("del log2"); // Use "del" for Windows
 
     // Prepare a log file using logappend
-    runCommand("logappend.exe -T 5 -K secret -A -E Fred -R 1 log2");
-    runCommand("logappend.exe -T 6 -K secret -A -G Alice -R 2 log2");
+    runCommand("logappend.exe -T 1 -K secret -A -E Fred log2");
+    runCommand("logappend.exe -T 2 -K secret -A -G Alice log2");
+    runCommand("logappend.exe -T 3 -K secret -A -E Fred -R 1 log2");
+    runCommand("logappend.exe -T 4 -K secret -A -G Alice -R 1 log2");
 
     // Test 1: Query state of the gallery
     assert(runCommand("logread.exe -K secret -S log2") == 0);

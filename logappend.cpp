@@ -61,6 +61,8 @@ bool validateToken(const std::string& token, const std::string& storedEncryptedT
 
 // Check if a new timestamp is greater than the last timestamp
 bool checkTimestampOrder(const std::string& newTimestamp, const std::string& lastTimestamp) {
+    if (lastTimestamp.empty())
+        return true;
     return std::stoi(newTimestamp) > std::stoi(lastTimestamp);
 }
 
@@ -114,19 +116,29 @@ void updateState(const std::string& personName, const std::string& roomID, const
 // Process the log file to rebuild the current state
 bool processLogFile(const std::string& logFile, const std::string& encryptionKey, std::string& lastTimestamp) {
     std::fstream log(logFile, std::ios::in | std::ios::out | std::ios::app); // Open for reading and appending
+
+    // Check if the log file exists, if not, create it
     if (!log.is_open()) {
-        std::cerr << "Error: Unable to open or create log file: " << logFile << std::endl;
+        std::ofstream createLog(logFile);  // Create an empty log file if it doesn't exist
+        if (!createLog.is_open()) {
+            return false;
+        }
+        createLog.close();  // Close the file after creation
+        log.open(logFile, std::ios::in | std::ios::out | std::ios::app);  // Reopen in read-write mode
+    }
+
+    if (!log.is_open()) {
         return false;
     }
 
     std::string line;
     while (std::getline(log, line)) {
-        size_t pos = line.find(',');
+        std::string decryptedLogEntry = decryptData(line, encryptionKey);
+        size_t pos = decryptedLogEntry.find(',');
         if (pos != std::string::npos) {
-            lastTimestamp = line.substr(0, pos); // Extract the timestamp
+            lastTimestamp = decryptedLogEntry.substr(0, pos); // Extract the timestamp from the decrypted entry
         }
 
-        std::string decryptedLogEntry = decryptData(line, encryptionKey);
         std::vector<std::string> tokens;
         std::istringstream ss(decryptedLogEntry);
         std::string token;
@@ -141,45 +153,54 @@ bool processLogFile(const std::string& logFile, const std::string& encryptionKey
             updateState(personName, roomID, action);
         }
     }
+
     log.close();
     return true;
 }
+
 
 // Main function
 int main(int argc, char* argv[]) {
     std::string timestamp, token, personType, personName, action, roomID;
     std::string logFile, batchFile;
 
+    //load secrets
     auto envVars = loadEnv(".env");
     std::string encryptionKey = envVars["ENCRYPTION_KEY"];
     std::string secret = envVars["SECRET"];
 
+    //parse command line
     if (!parseCommandLine(argc, argv, timestamp, token, personType, personName, action, roomID, logFile, batchFile)) {
         std::cerr << "invalid" << std::endl;
         return 255;
     }
 
+    //validate token
     std::string storedEncryptedToken = encryptData(secret, encryptionKey);
     if (!validateToken(token, storedEncryptedToken, encryptionKey)) {
         return 255;
     }
 
+    //validate user input
     if (!isValidName(personName) || (!roomID.empty() && !isValidRoomID(roomID)) || timestamp.empty()) {
         std::cerr << "invalid" << std::endl;
         return 255;
     }
-
+        
+    //open log file, decrypt it, find the last timestamp
     std::string lastTimestamp;
     if (!processLogFile(logFile, encryptionKey, lastTimestamp)) {
         std::cerr << "invalid" << std::endl;
         return 255;
     }
 
-    if (!lastTimestamp.empty() && !checkTimestampOrder(timestamp, lastTimestamp)) {
+    //validate timestamp
+    if (!checkTimestampOrder(timestamp, lastTimestamp)) {
         std::cerr << "invalid" << std::endl;
         return 255;
     }
 
+    //validate person is in gallery/room
     if (action == "Leave") {
         bool leavingGallery = roomID.empty();
         if (!validateStateForDeparture(personName, roomID, leavingGallery)) {
