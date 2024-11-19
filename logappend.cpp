@@ -77,6 +77,11 @@ int main(int argc, char* argv[]) {
     std::string timestamp, token, personType, personName, action, roomID;
     std::string logFile, batchFile;
 
+    auto envVars = loadEnv(".env");
+
+    std::string encryptionKey = envVars["ENCRYPTION_KEY"];
+    std::string secret = envVars["SECRET"];
+
     // Parse command-line arguments
     if (!parseCommandLine(argc, argv, timestamp, token, personType, personName, action, roomID, logFile, batchFile)) {
         std::cerr << "invalid" << std::endl;
@@ -84,8 +89,8 @@ int main(int argc, char* argv[]) {
     }
 
     // Validate the log token
-    const std::string encryptionKey = "thisisasecretkey";
-    std::string storedEncryptedToken = encryptData("secret", encryptionKey);
+    //const std::string encryptionKey = "thisisasecretkey";
+    std::string storedEncryptedToken = encryptData(secret, encryptionKey);
     if (!validateToken(token, storedEncryptedToken, encryptionKey)) {
         return 255;
     }

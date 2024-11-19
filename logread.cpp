@@ -32,9 +32,14 @@ int main(int argc, char* argv[]) {
         return 255;
     }
 
+    auto envVars = loadEnv(".env");
+
+    std::string encryptionKey = envVars["ENCRYPTION_KEY"];
+    std::string secret = envVars["SECRET"];
+
     // Load and encrypt the stored token for verification
-    const std::string encryptionKey = "thisisasecretkey";
-    std::string storedEncryptedToken = encryptData("secret", encryptionKey);
+    //const std::string encryptionKey = "thisisasecretkey";
+    std::string storedEncryptedToken = encryptData(secret, encryptionKey);
 
     // Verify provided token
     if (!verifyToken(token, storedEncryptedToken, encryptionKey)) {

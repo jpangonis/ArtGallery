@@ -6,6 +6,8 @@
 #include <cryptopp/filters.h>
 #include <cryptopp/secblock.h>
 #include <cryptopp/base64.h>
+#include <fstream>
+#include <unordered_map>
 
 std::string encryptData(const std::string& token, const std::string& key) {
     using namespace CryptoPP;
@@ -75,3 +77,25 @@ std::string decryptData(const std::string& encryptedToken, const std::string& ke
 bool verifyToken(const std::string& providedToken, const std::string& encryptedToken, const std::string& key) {
     return providedToken == decryptData(encryptedToken, key);
 }
+
+std::unordered_map<std::string, std::string> loadEnv(const std::string& filename) {
+    std::unordered_map<std::string, std::string> envVars;
+    std::ifstream file(filename);
+    std::string line;
+
+    if (!file.is_open()) {
+        throw std::runtime_error("Unable to open .env file");
+    }
+
+    while (std::getline(file, line)) {
+        size_t pos = line.find('=');
+        if (pos != std::string::npos) {
+            std::string key = line.substr(0, pos);
+            std::string value = line.substr(pos + 1);
+            envVars[key] = value;
+        }
+    }
+    file.close();
+    return envVars;
+}
+
