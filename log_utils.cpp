@@ -14,30 +14,32 @@ std::string encryptData(const std::string& token, const std::string& key) {
     std::string encrypted;
 
     // Set up key and IV (Initialization Vector)
-    SecByteBlock keyBytes((const byte*)key.data(), key.size());
+    SecByteBlock keyBytes((const byte*)key.data(), std::min(key.size(), static_cast<size_t>(AES::DEFAULT_KEYLENGTH)));
     byte iv[AES::BLOCKSIZE] = { 0 }; // IV initialized to zero for simplicity
 
     try {
         // Encryption using CBC mode and PKCS7 padding
-        CBC_Mode<AES>::Encryption encryptor(keyBytes, keyBytes.size(), iv);
+        CBC_Mode<AES>::Encryption encryptor;
+        encryptor.SetKeyWithIV(keyBytes, keyBytes.size(), iv);
 
-        // Encrypt the data with the encryptor
+        // Encrypt the data
+        std::string cipherText;
         StringSource ss(token, true,
             new StreamTransformationFilter(encryptor,
-                new StringSink(encrypted),
+                new StringSink(cipherText),
                 StreamTransformationFilter::PKCS_PADDING
             )
         );
 
-        // Base64 encode the encrypted binary data for easy transport
-        std::string encoded;
-        StringSource(encrypted, true, new Base64Encoder(new StringSink(encoded)));
-        return encoded;
+        // Base64 encode the encrypted binary data
+        StringSource ss2(cipherText, true, new Base64Encoder(new StringSink(encrypted), false)); // `false` avoids line breaks
     }
     catch (const Exception& e) {
         std::cerr << "Encryption error: " << e.what() << std::endl;
         return "";
     }
+
+    return encrypted;
 }
 
 std::string decryptData(const std::string& encryptedToken, const std::string& key) {
@@ -45,19 +47,20 @@ std::string decryptData(const std::string& encryptedToken, const std::string& ke
     std::string decrypted;
 
     // Set up key and IV (Initialization Vector)
-    SecByteBlock keyBytes((const byte*)key.data(), key.size());
+    SecByteBlock keyBytes((const byte*)key.data(), std::min(key.size(), static_cast<size_t>(AES::DEFAULT_KEYLENGTH)));
     byte iv[AES::BLOCKSIZE] = { 0 }; // IV initialized to zero
 
     try {
-        // Decode the Base64 encoded string to get the raw encrypted data
+        // Decode the Base64 encoded string
         std::string decoded;
-        StringSource(encryptedToken, true, new Base64Decoder(new StringSink(decoded)));
+        StringSource ss1(encryptedToken, true, new Base64Decoder(new StringSink(decoded)));
 
-        // Decrypting the data using CBC mode and handling padding
-        CBC_Mode<AES>::Decryption decryptor(keyBytes, keyBytes.size(), iv);
+        // Decrypting the data using CBC mode and PKCS7 padding
+        CBC_Mode<AES>::Decryption decryptor;
+        decryptor.SetKeyWithIV(keyBytes, keyBytes.size(), iv);
 
-        // Decrypt with automatic padding (PKCS7 padding)
-        StringSource ss(decoded, true,
+        // Decrypt the data
+        StringSource ss2(decoded, true,
             new StreamTransformationFilter(decryptor,
                 new StringSink(decrypted),
                 StreamTransformationFilter::PKCS_PADDING // Ensure PKCS7 padding is used
@@ -71,6 +74,8 @@ std::string decryptData(const std::string& encryptedToken, const std::string& ke
 
     return decrypted;
 }
+
+
 
 
 // Verify the provided token by decrypting the stored encrypted token and comparing
