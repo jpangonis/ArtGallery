@@ -43,16 +43,16 @@ void testLogAppend() {
     // Test 5: Adding a guest
     assert(runCommand("logappend.exe -T 8 -K secret -A -G Alice -R 2 log1") != 0);
 
-    //wrong token
+    //Test 6: wrong token
     assert(runCommand("logappend.exe -T 9 -K wrongsecret -A -G Alice -R 2 log1") != 0);
 
-    //leaving gallery before leaving room
+    //Test 7: leaving gallery before leaving room
     assert(runCommand("logappend.exe -T 10 -K secret -L -G Alice log1") != 0);
 
-    //leaving room correctly
+    //Test 8: leaving room correctly
     assert(runCommand("logappend.exe -T 11 -K secret -L -E Fred -R 1 log1") == 0);
 
-    //incorrect order
+    //Test 9: incorrect order
     assert(runCommand("logappend.exe -T 2 -K secret -A -G Fred -R 2 log1") != 0);
 
     std::cout << "logappend tests passed!" << std::endl;
@@ -83,14 +83,14 @@ void testLogRead() {
     runCommand("del log3"); // Use "del" for Windows
     assert(runCommand("logread.exe -K secret -S log3") != 0);
 
-    // New Test 5: Unauthorized access attempt
+    // Test 5: Unauthorized access attempt
     // Attempt to read without providing a key
     assert(runCommand("logread.exe -S log2") != 0);
 
-    // Attempt to access data for an unspecified employee
+    // Test 6: Attempt to access data for an unspecified employee
     assert(runCommand("logread.exe -K secret -R -E Nonexistent log2") == 0);
 
-    // Attempt to access data for a room without specifying the room parameter
+    // Test 7: Attempt to access data for a room without specifying the room parameter
     assert(runCommand("logread.exe -K secret -R log2") != 0);
 
 

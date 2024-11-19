@@ -19,8 +19,8 @@ int main(int argc, char* argv[]) {
         if (arg == "-K") token = argv[++i];
         else if (arg == "-S") queryType = "State";
         else if (arg == "-R") queryType = "RoomList";
-        //else if (arg == "-T") queryType = "TotalTime";
-        //else if (arg == "-I") { queryType = "SharedRooms"; multiplePersons = true; }
+        //else if (arg == "-T") queryType = "TotalTime"; //not implemented
+        //else if (arg == "-I") { queryType = "SharedRooms"; multiplePersons = true; } //not implemented
         else if (arg == "-E") { personType = "Employee"; persons.push_back(argv[++i]); }
         else if (arg == "-G") { personType = "Guest"; persons.push_back(argv[++i]); }
         else logFile = argv[i];
@@ -146,18 +146,6 @@ int main(int argc, char* argv[]) {
         }
         std::cout << std::endl;
     }
-    /*
-    else if (queryType == "TotalTime") {
-        if (persons.size() != 1) { std::cerr << "unimplemented" << std::endl; return 0; }
-        // Calculate total time spent by the specified person
-        std::cout << "unimplemented" << std::endl;
-    }
-    else if (queryType == "SharedRooms") {
-        if (!multiplePersons || persons.empty()) { std::cerr << "invalid" << std::endl; return 255; }
-        // Find rooms occupied simultaneously by all specified persons
-        std::cout << "unimplemented" << std::endl;
-    }
-    */
 
     return 0;
 }
