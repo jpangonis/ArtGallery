@@ -68,6 +68,10 @@ bool validateToken(const string& token, const string& storedEncryptedToken, cons
 bool checkTimestampOrder(const string& newTimestamp, const string& lastTimestamp) {
     if (lastTimestamp.empty())
         return true;
+    if (stoi(newTimestamp) > UINT32_MAX)
+        return false;
+    if (stoi(newTimestamp) < 0)
+        return false;
     return stoi(newTimestamp) > stoi(lastTimestamp);
 }
 
