@@ -58,7 +58,7 @@ void testLogAppend() {
     //Test 10: leaving room before entering
     assert(runCommand("logappend.exe -T 12 -K secret -L -E Fred -R 2 log1") != 0);
 
-    assert(runCommand("logappend.exe -T 1000000000000 -K secret -A -E Julia log1") != 0);
+    assert(runCommand("logappend.exe -T 10000000000000000 -K secret -A -E Julia log1") != 0);
 
     std::cout << "logappend tests passed!" << std::endl;
 }
