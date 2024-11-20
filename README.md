@@ -1,10 +1,14 @@
 This project involes making a secure art gallery. There are two files to run. LogAppend adds new information to a specified log. LogRead reads information from a specified log. 
 
-This is a secure implementation. Encryption of the log is done using the crypto++ library. Crypto++ uses AES encryption. All input validation is done using regex expressions or additional criteria. 
+This is a secure implementation. Encryption of the log is done using the crypto++ library. Crypto++ uses AES encryption. All input validation is done using regex expressions or additional criteria. Error handling is done to not leak sensitive information. All secrets are stored in a secure .env file. A test file named test_log.cpp shows the test functions for this project. 
 
 TO RUN:
 
 Download the crypto++ library found here: https://github.com/weidai11/cryptopp/tree/34a34967ac560c1801bf3845dbac3ac63c1d4c05
+
+NOTE, it may be easier to run using vcpkg. To do this follow the instructions in this link: https://github.com/microsoft/vcpkg.git
+
+After cloning the library, an env file needs to be made to store the secrets. Create a new file named ".env" and add the secret and encryption key in the form ENCRYPTION_KEY=encryptionkey /n SECRET=secret
 
 To run on visual studio IDE: Paste the cryptopp library into the project. From [Visual Studio->Solution Explorer] click on [Solution->Add->Existing Project] and select the cryptlib.vcproj file to include in your solution. Build and run the application. Note, there are two main files here so it is likely one will have to be commented out. To add in the command line arguments go to [project -> properties -> configuration properties -> debugging -> edit the command line arguments]
 
