@@ -8,14 +8,18 @@
 #include <algorithm>
 #include <sstream>
 
+using std::cout; using std::endl; using std::string; using std::vector; using std::cerr;
+using std::ifstream; using std::map; using std::set; using std::getline; using std::istringstream;
+using std::stoi; using std::invalid_argument; using std::out_of_range;
+
 int main(int argc, char* argv[]) {
-    std::string token, logFile, queryType, personType, personName;
-    std::vector<std::string> persons;
+    string token, logFile, queryType, personType, personName;
+    vector<string> persons;
     bool multiplePersons = false;
 
     // Parse command-line arguments
     for (int i = 1; i < argc; i++) {
-        std::string arg = argv[i];
+        string arg = argv[i];
         if (arg == "-K") token = argv[++i];
         else if (arg == "-S") queryType = "State";
         else if (arg == "-R") queryType = "RoomList";
@@ -28,65 +32,64 @@ int main(int argc, char* argv[]) {
 
     // Check if only one query type is specified
     if (queryType.empty() || logFile.empty() || token.empty()) {
-        std::cerr << "invalid" << std::endl;
+        cerr << "invalid" << endl;
         return 255;
     }
 
     auto envVars = loadEnv(".env");
 
-    std::string encryptionKey = envVars["ENCRYPTION_KEY"];
-    std::string secret = envVars["SECRET"];
+    string encryptionKey = envVars["ENCRYPTION_KEY"];
+    string secret = envVars["SECRET"];
 
     // Load and encrypt the stored token for verification
-    //const std::string encryptionKey = "thisisasecretkey";
-    std::string storedEncryptedToken = encryptData(secret, encryptionKey);
+    string storedEncryptedToken = encryptData(secret, encryptionKey);
 
     // Verify provided token
     if (!verifyToken(token, storedEncryptedToken, encryptionKey)) {
-        std::cerr << "integrity violation" << std::endl;
+        cerr << "integrity violation" << endl;
         return 255;
     }
 
     // Open the log file for reading
-    std::ifstream log(logFile);
+    ifstream log(logFile);
     if (!log.is_open()) {
-        std::cerr << "integrity violation" << std::endl;
+        cerr << "integrity violation" << endl;
         return 255;
     }
 
     // Variables to store gallery state
-    std::set<std::string> employeesInGallery, guestsInGallery;
-    std::map<int, std::set<std::string>> roomOccupancy;
-    std::map<std::string, std::vector<int>> personRoomHistory;
+    set<string> employeesInGallery, guestsInGallery;
+    map<int, set<string>> roomOccupancy;
+    map<string, vector<int>> personRoomHistory;
 
-    std::string EncryptedLogEntry;
-    while (std::getline(log, EncryptedLogEntry)) {
-        std::string logEntry = decryptData(EncryptedLogEntry, encryptionKey);
+    string EncryptedLogEntry;
+    while (getline(log, EncryptedLogEntry)) {
+        string logEntry = decryptData(EncryptedLogEntry, encryptionKey);
 
         // Parse the log entry to determine event type and update the state
-        std::istringstream entryStream(logEntry);
-        std::string timestamp, type, name, action, roomStr;
+        istringstream entryStream(logEntry);
+        string timestamp, type, name, action, roomStr;
         int roomID = -1;
 
         // Parse log entry assuming format: timestamp, type, name, action[, Room:roomID]
-        std::getline(entryStream, timestamp, ',');
-        std::getline(entryStream, type, ',');
-        std::getline(entryStream, name, ',');
-        std::getline(entryStream, action, ',');
+        getline(entryStream, timestamp, ',');
+        getline(entryStream, type, ',');
+        getline(entryStream, name, ',');
+        getline(entryStream, action, ',');
 
         // Check if a room is specified in the format "Room:roomID"
-        if (std::getline(entryStream, roomStr)) {
+        if (getline(entryStream, roomStr)) {
             size_t pos = roomStr.find("Room:");
-            if (pos != std::string::npos) {
+            if (pos != string::npos) {
                 try {
-                    roomID = std::stoi(roomStr.substr(pos + 5));  // Parse room number after "Room:"
+                    roomID = stoi(roomStr.substr(pos + 5));  // Parse room number after "Room:"
                 }
-                catch (const std::invalid_argument& e) {
-                    std::cerr << "Invalid log entry" << std::endl;
+                catch (const invalid_argument& e) {
+                    cerr << "Invalid log entry" << endl;
                     continue;
                 }
-                catch (const std::out_of_range& e) {
-                    std::cerr << "Invalid log entry" << std::endl;
+                catch (const out_of_range& e) {
+                    cerr << "Invalid log entry" << endl;
                     continue;
                 }
             }
@@ -122,29 +125,29 @@ int main(int argc, char* argv[]) {
     // Process the query type
     if (queryType == "State") {
         // Output current state of employees and guests in gallery
-        for (const auto& emp : employeesInGallery) std::cout << emp << ",";
-        std::cout << "\n";
-        for (const auto& guest : guestsInGallery) std::cout << guest << ",";
+        for (const auto& emp : employeesInGallery) cout << emp << ",";
+        cout << "\n";
+        for (const auto& guest : guestsInGallery) cout << guest << ",";
 
         // Room-by-room listing
         for (const auto& room : roomOccupancy) {
             int roomID = room.first;
-            const std::set<std::string>& occupants = room.second;
-            std::cout << "\n" << roomID << ": ";
-            for (const auto& person : occupants) std::cout << person << ",";
+            const set<string>& occupants = room.second;
+            cout << "\n" << roomID << ": ";
+            for (const auto& person : occupants) cout << person << ",";
         }
 
-        std::cout << std::endl;
+        cout << endl;
     }
     else if (queryType == "RoomList") {
-        if (persons.size() != 1) { std::cerr << "invalid" << std::endl; return 255; }
+        if (persons.size() != 1) { cerr << "invalid" << endl; return 255; }
         // List rooms entered by the specified person in chronological order
         auto& roomHistory = personRoomHistory[persons[0]];
         for (size_t i = 0; i < roomHistory.size(); ++i) {
-            if (i > 0) std::cout << ",";
-            std::cout << roomHistory[i];
+            if (i > 0) cout << ",";
+            cout << roomHistory[i];
         }
-        std::cout << std::endl;
+        cout << endl;
     }
 
     return 0;
