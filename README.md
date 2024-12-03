@@ -2,6 +2,13 @@ This project involes making a secure art gallery. There are two files to run. Lo
 
 This is a secure implementation. Encryption of the log is done using the crypto++ library. Crypto++ uses AES encryption. All input validation is done using regex expressions or additional criteria. Error handling is done to not leak sensitive information. All secrets are stored in a secure .env file. A test file named test_log.cpp shows the test functions for this project. 
 
+SECURITY:
+Confidentiality: only a secure key is allowed to access the log. Even if an attacker is able to gain access to the log, all log files are encrypted.
+
+Integrity: A user is only able to append information to the log or read from the log. No one is able to modify the log except add to it.
+
+Availability: All information is correct in the log and people with the secret have access to it.  
+
 TO RUN:
 
 Download the crypto++ library found here: https://github.com/weidai11/cryptopp/tree/34a34967ac560c1801bf3845dbac3ac63c1d4c05
